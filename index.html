@@ -54,7 +54,24 @@ function drawHR(selected=''){let svg=$('#hr-graph');svg.replaceChildren();let x=
 drawHR();const hrInfo={Rigel:'Rigel: toward the upper left. Hot surface and very high luminosity.',Sun:'Sun: on the main sequence. Its luminosity is our reference value, 1.',Antares:'Antares: toward the upper right. Cooler surface, yet very high luminosity.'};$$('[data-hr]').forEach(b=>b.onclick=()=>{drawHR(b.dataset.hr);$('#hr-clue').textContent=hrInfo[b.dataset.hr];$$('[data-hr]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
 function missing(){let m=[];questions.forEach(q=>{if(q.rows){if(q.rows.some((r,i)=>!state['q'+q.n+'r'+i]))m.push(q.n)}else if(!String(state['q'+q.n]||'').trim())m.push(q.n)});return m}
 function recordText(){return 'STARLIGHT LAB · IACA SCIENCE 6\nName / period: '+(state.student||'Not entered')+'\nDate: '+new Date().toLocaleDateString()+'\n\n'+questions.map(q=>q.n+'. '+q.title+'\n'+(q.rows?q.rows.map((r,i)=>'  '+r+': '+(state['q'+q.n+'r'+i]||'[unanswered]')).join('\n'):(state['q'+q.n]||'[unanswered]'))).join('\n\n');}
-function validate(){let m=missing();if(!String(state.student||'').trim()){$('#status').textContent='Add your name and period first.';$('#student-name').focus();return false}if(m.length){$('#status').textContent='Still to finish: items '+m.join(', ')+'. Your answers are still here.';let el=$('#record-'+m[0]);if(m[0]===6||m[0]===7){setStar(stars.findIndex((s,i)=>!state['q6r'+i]||!state['q7r'+i]));$('#s6').scrollIntoView()}else el.scrollIntoView();return false}return true}
+function validate(){
+  let m=missing();
+
+  // Still require a name/period
+  if(!String(state.student||'').trim()){
+    $('#status').textContent='Add your name and period first.';
+    $('#student-name').focus();
+    return false;
+  }
+
+  // Allow unfinished work to be downloaded
+  if(m.length){
+    $('#status').textContent =
+      'Saving unfinished work. Unanswered items: ' + m.join(', ') + '.';
+  }
+
+  return true;
+}
 $('#download-record').onclick=()=>{if(!validate())return;let blob=new Blob([recordText()],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Starlight_Lab_Record.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);$('#status').textContent='Record saved. Upload Starlight_Lab_Record.txt to the Classroom assignment, then Turn in.'};
 $('#copy-record').onclick=async()=>{if(!validate())return;try{await navigator.clipboard.writeText(recordText());$('#status').textContent='Record copied. Paste it into the response destination your teacher gave you.'}catch{$('#status').textContent='Copy is unavailable in this browser. Use Save lab record instead.'}};
 $('#clear-record').onclick=()=>{if(confirm('Clear the answers saved on this device? Save your record first.')){state={};persist();location.reload()}};
